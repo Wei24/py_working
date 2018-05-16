@@ -242,6 +242,7 @@ def one_frame(workdir=None,timeindex=None,single_plot=None):
 
 def one_frame_dic(single_plot=None,in_dic=None):
     key_list=['94a','131a','171a','193a','211a','304a','gst']
+    key_list=['94a','131a','171a','193a','211a','304a']
     if single_plot==True:
         fig = plt.figure(figsize=(12, 8),dpi=100)
     cur_fov=make_fov(fitsfile=in_dic['radio'][0],xsize=100)
@@ -251,5 +252,14 @@ def one_frame_dic(single_plot=None,in_dic=None):
         cur_ax=fig.add_subplot(3,3,1+ikey_index)
         cur_title=ikey
         alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True) 
+
+def make_movie(dic_list_file=None)
+    dic_list=pickle.load(dic_list_file)
+    #make figure
+    fig = plt.figure(figsize=(12, 8),dpi=100)
+    for i, cur_dic in enumerate(in_dic):
+        one_frame_dic(single_plot=False, in_dic=cur_dic)
+
+
 
 #just for test, now, comment it from baozi, comment again from hackintosh, now comment from macbook pro
