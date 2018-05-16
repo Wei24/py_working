@@ -263,4 +263,4 @@ def make_movie(dic_list_file=None):
 
 
 #just for test, now, comment it from baozi, comment again from hackintosh, now comment from macbook pro,edit on pycharm
-#and more
+#and more, clone from github directly
