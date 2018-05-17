@@ -152,31 +152,24 @@ def draw_goes():
         ran = gmax - gmin
         db = 2.8 / ran
         goesdifp = goesdif * db + gmin + (-6)
-        ax3.plot_date(dates, np.log10(goest.data['xrsb']), '-', label='1.0--8.0 $\AA$', color='red', lw=2)
-        ax3.plot_date(dates[0:-1], goesdifp, '-', label='derivate', color='blue', lw=0.4)
+        ax.plot_date(dates, np.log10(goest.data['xrsb']), '-', label='1.0--8.0 $\AA$', color='red', lw=2)
+        ax.plot_date(dates[0:-1], goesdifp, '-', label='derivate', color='blue', lw=0.4)
 
-        ax3.set_ylim([-7, -3])
-        ax3.set_yticks([-7, -6, -5, -4, -3])
-        ax3.set_yticklabels([r'$10^{-7}$', r'$10^{-6}$', r'$10^{-5}$', r'$10^{-4}$', r'$10^{-3}$'])
-        ax3.set_title('Goes Soft X-ray', fontsize=12)
-        ax3.set_ylabel('Watts m$^{-2}$')
-        ax3.set_xlabel(datetime.datetime.isoformat(goest.data.index[0])[0:10])
-        ax3.axvspan(dates[899], dates[dates.size - 899], alpha=0.2)
+        ax.set_ylim([-7, -3])
+        ax.set_yticks([-7, -6, -5, -4, -3])
+        ax.set_yticklabels([r'$10^{-7}$', r'$10^{-6}$', r'$10^{-5}$', r'$10^{-4}$', r'$10^{-3}$'])
+        ax.set_title('Goes Soft X-ray', fontsize=12)
+        ax.set_ylabel('Watts m$^{-2}$')
+        ax.set_xlabel(datetime.datetime.isoformat(goest.data.index[0])[0:10])
+        ax.axvspan(dates[899], dates[dates.size - 899], alpha=0.2)
 
-        ax2 = ax3.twinx()
-        # ax2.set_yscale("log")
-        ax2.set_ylim([-7, -3])
-        ax2.set_yticks([-7, -6, -5, -4, -3])
-        ax2.set_yticklabels(['B', 'C', 'M', 'X', ''])
-
-        ax3.yaxis.grid(True, 'major')
-        ax3.xaxis.grid(False, 'major')
-        ax3.legend(prop={'size': 6})
+        ax.yaxis.grid(True, 'major')
+        ax.xaxis.grid(False, 'major')
+        ax.legend(prop={'size': 6})
 
         formatter = mpl.dates.DateFormatter('%H:%M')
-        ax3.xaxis.set_major_formatter(formatter)
-
-        ax3.fmt_xdata = mpl.dates.DateFormatter('%H:%M')
+        ax.xaxis.set_major_formatter(formatter)
+        ax.fmt_xdata = mpl.dates.DateFormatter('%H:%M')
 
 def make_time_dic(workdir=None,radio_dir=None,kw2=None,start_timeindex=None, end_timeindex=None):
     keyword1_list=['94a','131a','171a','193a','211a','304a','335a','gst']
