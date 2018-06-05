@@ -102,7 +102,7 @@ def nearest_eovsa_aia(emap=None,alist=None,time=None):
 #    pickle.dump(dic_list, open('/srg/ywei/data/aia/time_dic.p', 'wb'))
 #    return dic_list
 
-def draw_goes():
+def draw_goes(goestime=None, ax=None):
     if goestime:
         btgoes = goestime[0]
         etgoes = goestime[1]
@@ -110,10 +110,10 @@ def draw_goes():
         datstrg = datstr.replace('-', '/')
         btgoes = datstrg + ' ' + qa.time(qa.quantity(tim[0] - 1800, 's'), form='clean', prec=9)[0]
         etgoes = datstrg + ' ' + qa.time(qa.quantity(tim[tidx[-1] - 1] + 1800, 's'), form='clean', prec=9)[0]
-    if verbose:
-        print 'Acquire GOES soft X-ray data in from ' + btgoes + ' to ' + etgoes
+    #if verbose:
+    #    print 'Acquire GOES soft X-ray data in from ' + btgoes + ' to ' + etgoes
 
-    ax3 = plt.subplot(gs1[2])
+    #ax3 = plt.subplot(gs1[2])
 
     goesscript = os.path.join(workdir, 'goes.py')
     goesdatafile = os.path.join(workdir, 'goes.dat')
@@ -311,16 +311,20 @@ def one_frame(workdir=None,timeindex=None,single_plot=None):
 
 def one_frame_dic(single_plot=None,in_dic=None,fig=None):
     #key_list=['94a','131a','171a','193a','211a','304a','gst']
-    key_list=['94a','131a','171a','193a','211a','304a']
+    key_list=['94a','131a','171a','193a','211a','304a','goes']
     if single_plot==True:
         fig = plt.figure(figsize=(12, 8),dpi=100)
     cur_fov=make_fov(fitsfile=in_dic['radio'][0],xsize=100)
     for ikey_index,ikey in enumerate(key_list):
+        if ikey=='goes':
+            cur_ax = fig.add_subplot(3, 3, 1 + ikey_index)
+            cur_title = ikey
+            draw_goes(goestime=['2017/09/06 18:55:00','2017/09/06 19:55:00'], ax=cur_ax)
         image_list=[]
         image_list.append(in_dic[ikey])
         cur_ax=fig.add_subplot(3,3,1+ikey_index)
         cur_title=ikey
-        alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True) 
+        alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True)
 
 def make_movie(dic_list_file=None):
     dic_list=pickle.load(open(dic_list_file,'rb'))
@@ -333,3 +337,5 @@ def make_movie(dic_list_file=None):
 
 #just for test, now, comment it from baozi, comment again from hackintosh, now comment from macbook pro,edit on pycharm
 #and more, clone from github directly,test: from pycharm to baozi
+#test again from pycharm to baozi again
+#now test from baozi to local
