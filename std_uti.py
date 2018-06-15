@@ -41,14 +41,18 @@ def makelist(tdir='',keyword1='',keyword2=''):
                 li.append(os.path.join(root, file))
     return li
 
-def make_fov(fitsfile=None,xsize=None):
+def make_fov(fitsfile=None,xsize=None,eovsa=None):
     curmap=smap.Map(fitsfile)
-    row = curmap.data.shape[2]
-    col = curmap.data.shape[3]
+    if eovsa==True:
+        row = curmap.data.shape[2]
+        col = curmap.data.shape[3]
+        curmap.data=curmap.data.reshape(curmap.data.shape[2],curmap.data.shape[3])
+    else:
+        row = curmap.data.shape[0]
+        col = curmap.data.shape[1]
     positon = np.nanargmax(curmap.data)
     m, n = divmod(positon, col)
     length = (xsize/2) * u.arcsec
-    curmap.data=curmap.data.reshape(curmap.data.shape[2],curmap.data.shape[3])
     x0 = curmap.xrange[0] + curmap.scale[1] * (n + 0.5) * u.pix
     y0 = curmap.yrange[0] + curmap.scale[0] * (m + 0.5) * u.pix
     x1 = x0 - length
@@ -212,11 +216,12 @@ def make_time_dic(workdir=None,radio_dir=None,kw2=None,start_timeindex=None, end
     return dic_list
 
 def add_to_dic(save_file=None,kw1=None,kw2=None,workdir=None):
-    load_dic = pickle.load(open('/srg/ywei/data/aia/time_dic.p', 'rb'))
+    load_dic = pickle.load(open('/srg/ywei/data/aia/update_bbso_time_dic.p', 'rb'))
     file_list=makelist(tdir=workdir, keyword1=kw1,keyword2=kw2)
     time_list=[]
     for cfile in file_list:
         time_list.append(Time(smap.Map(cfile).date).jd)
+    # noinspection PyInterpreter
     for cur_dic in load_dic:
         cur_time=Time(cur_dic['time']).jd
         diff_list=[]
@@ -233,12 +238,51 @@ def change_date_format(workdir=None,kw1=None,kw2=None):
         print cfile
         with fits.open(cfile,mode='update') as chdul:
             hdr = chdul[0].header
-            wrong_tstring=chdul[0].header['date_obs']
-            hdr['CUNIT1']='arcsec'
-            hdr['CUNIT2']='arcsec'
+            #wrong_tstring=chdul[0].header['date-obs']
+            #hdr['CUNIT1']='arcsec'
+            #hdr['CUNIT2']='arcsec'
             #hdr['date_obs']='2017-09-06T'+wrong_tstring.split(" ",2)[2]
             #hdr['date-obs']='2017-09-06T'+wrong_tstring.split(" ",2)[2]
+            #hdr['date-obs']=hdr['date-obs']+'T'+hdr['time-obs']
+            #hdr['CRVAL1'] = float(hdr['CRVAL1'])
+            #hdr['CRVAL2'] = float(hdr['CRVAL2'])
+            hdr['CTYPE1'] = 'HPLN-TAN'
+            hdr['CTYPE2'] = 'HPLT-TAN'
             chdul.flush()
+
+def regenerating_gst_fits(workdir=None,kw1=None,kw2=None):
+    file_list=makelist(tdir=workdir, keyword1=kw1,keyword2=kw2)
+    for cfile in file_list:
+        gst_file_name=cfile.split('/')[-1]
+        os.system('cp /srg/ywei/data/aia/sep06/aia_lev1_171a_2017_09_06t19_21_45_35z_image_lev1.fits /srg/ywei/data/aia/sep06/gst_oriform'+cfile.split('/')[-1])
+        cur_file='/srg/ywei/data/aia/sep06/gst_oriform/'+cfile.split('/')[-1]
+        print cfile
+        print cur_file
+
+        with fits.open(cfile,mode='read') as chdul:
+            chdr = chdul[0].header
+            cdata = chdul[0].data
+        with fits.open(cfile,mode='update') as cur_hdul:
+            hdr = cur_hdul[1].header
+            cur_hdul[0].data = cdata
+            #wrong_tstring=chdul[0].header['date-obs']
+            #hdr['CUNIT1']='arcsec'
+            #hdr['CUNIT2']='arcsec'
+            #hdr['date_obs']='2017-09-06T'+wrong_tstring.split(" ",2)[2]
+            #hdr['date-obs']='2017-09-06T'+wrong_tstring.split(" ",2)[2]
+            #hdr['date-obs']=hdr['date-obs']+'T'+hdr['time-obs']
+            hdr['CRVAL1'] = chdr['CRVAL1']
+            hdr['CRVAL2'] = chdr['CRVAL1']
+            hdr['CDELT1'] = chdr['CDELT1']
+            hdr['CDELT2'] = chdr['CDELT2']
+            hdr['CRPIX1'] = chdr['CRPIX1']
+            hdr['CRPIX2'] = chdr['CRPIX2']
+            hdr['NAXIS1'] = chdr['NAXIS1']
+            hdr['NAXIS2'] = chdr['NAXIS2']
+            hdr['DATE-OBS'] = chdr['DATE-OBS']
+            chdul.flush()
+
+
 
 def alignment_plotting(ax=None,ax_title=None,fov=None,radio_maps=None,radio_fits=None,image_maps=None,image_fits=None,eovsamap=None):
     #make maps list with a given fov
@@ -273,7 +317,8 @@ def alignment_plotting(ax=None,ax_title=None,fov=None,radio_maps=None,radio_fits
     #ax.legend((line1,line2,line3,line4),('lable1','2','3','4'))
     #ax.legend()
     #setting title
-    ax.set_title(ax_title)
+    #ax.set_title(ax_title)
+    ax.set_title('')
     #image part
     cur_out=imaps[0].plot(axes=ax)
     return cur_out
@@ -283,7 +328,7 @@ def one_frame(workdir=None,timeindex=None,single_plot=None):
         fig = plt.figure(figsize=(12, 8),dpi=100)
     #make fov
     print 'step1'
-    cur_fov=make_fov(fitsfile='/srg/ywei/data/eovsa/sep6/slfcal/images/No37slf_192520_final_21-30.fits',xsize=100)
+    cur_fov=make_fov(fitsfile='/srg/ywei/data/eovsa/sep6/slfcal/images/No37slf_192520_final_21-30.fits',xsize=100,eovsa=True)
     #aia wavelength list
     eovsa_fits_dir='/srg/ywei/data/eovsa/sep6/slfcal/images/'
     #aiaw_list=['94','131','171','193','211','304','335','1600','1700','4500']
@@ -310,11 +355,11 @@ def one_frame(workdir=None,timeindex=None,single_plot=None):
         alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=eovsa_list,image_fits=cur_aiafit,eovsamap=True)
 
 def one_frame_dic(single_plot=None,in_dic=None,fig=None):
-    #key_list=['94a','131a','171a','193a','211a','304a','gst']
-    key_list=['94a','131a','171a','193a','211a','304a','goes']
+    key_list=['94a','131a','171a','193a','211a','304a','magnetogram','continuum','bbso']
+    #key_list=['94a','131a','171a','193a','211a','304a','goes']
     if single_plot==True:
         fig = plt.figure(figsize=(12, 8),dpi=100)
-    cur_fov=make_fov(fitsfile=in_dic['radio'][0],xsize=100)
+    cur_fov=make_fov(fitsfile=in_dic['radio'][0],xsize=100,eovsa=True)
     for ikey_index,ikey in enumerate(key_list):
         if ikey=='goes':
             cur_ax = fig.add_subplot(3, 3, 1 + ikey_index)
@@ -325,6 +370,12 @@ def one_frame_dic(single_plot=None,in_dic=None,fig=None):
         cur_ax=fig.add_subplot(3,3,1+ikey_index)
         cur_title=ikey
         alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True)
+        #if ikey=='bbso':
+        #    gst_fov=make_fov(fitsfile=in_dic['bbso'],xsize=120,eovsa=False)
+        #    #gst_fov=[[565,605],[-245,-205]]
+        #    alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=gst_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True)
+        #else:
+        #    alignment_plotting(ax=cur_ax,ax_title=cur_title,fov=cur_fov,radio_fits=in_dic['radio'],image_fits=image_list,eovsamap=True)
 
 def make_movie(dic_list_file=None):
     dic_list=pickle.load(open(dic_list_file,'rb'))
